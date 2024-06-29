@@ -1,21 +1,15 @@
-package test
+package logger
 
 import (
-	myLogger "github.com/package/logger"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 	"testing"
 )
 
-type Config struct {
-	Service    *string
-	InstanceID *string
-}
-
 func TestReplace(t *testing.T) {
 	before := zap.L()
-	log, err := myLogger.NewProduction()
+	log, err := NewProduction()
 	require.NoError(t, err)
 	if assert.NotNil(t, log) {
 		after := zap.L()
@@ -25,11 +19,12 @@ func TestReplace(t *testing.T) {
 }
 
 func TestLogger(t *testing.T) {
-	cfg := Config{
-		Service:    nil,
-		InstanceID: nil,
-	}
-	logger, err := myLogger.NewWithConfig(cfg)
+	//cfg := Config{
+	//	Service:    "production",
+	//	InstanceID: "125g51ad-r52341d",
+	//}
+	cfg := Configure()
+	logger, err := NewWithConfig(cfg)
 	require.NoError(t, err)
 	logger.Info("hello world", zap.String("key", "val"))
 }

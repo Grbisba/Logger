@@ -13,8 +13,8 @@ const (
 )
 
 type Config struct {
-	Service    *string
-	InstanceID *string
+	Service    string
+	InstanceID string
 }
 
 type ConfigFunc struct {
@@ -25,14 +25,15 @@ type ConfigFunc struct {
 	consoleErrors    zapcore.WriteSyncer
 }
 
-func Configure() *ConfigFunc {
+func Configure() ConfigFunc {
 	highPriority := zap.LevelEnablerFunc(highPriorityLevelEnableFunc)
 	lowPriority := zap.LevelEnablerFunc(lowPriorityLevelEnableFunc)
 
 	jsonEncoder := zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig())
 	consoleDebugging := zapcore.Lock(os.Stdout)
 	consoleErrors := zapcore.Lock(os.Stderr)
-	cfg := &ConfigFunc{
+
+	cfg := ConfigFunc{
 		highPriority:     highPriority,
 		lowPriority:      lowPriority,
 		jsonEncoder:      jsonEncoder,
