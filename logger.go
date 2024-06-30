@@ -1,17 +1,25 @@
-package logger
+package glogger
 
 import (
 	"go.uber.org/zap"
+	"os"
 )
 
 func NewProduction(opts ...zap.Option) (*zap.Logger, error) {
-	logger := zap.New(NewCore(), opts...)
-	zap.ReplaceGlobals(logger)
-	return logger, nil
+	core := NewCore().jsonCore
+	glog := zap.New(core, opts...)
+	zap.ReplaceGlobals(glog)
+	return glog, nil
 }
 
 func NewWithConfig(cfg Config, opts ...zap.Option) (*zap.Logger, error) {
+	_, err := os.Create("infra/glogger.log")
+	if err != nil {
+		panic("failed to create temporary file")
+	}
+
 	var fields []zap.Field
+	var options []zap.Option
 
 	if cfg.InstanceID != "" {
 		fields = append(fields, WithInstanceID(cfg.InstanceID))
@@ -19,14 +27,19 @@ func NewWithConfig(cfg Config, opts ...zap.Option) (*zap.Logger, error) {
 	if cfg.Service != "" {
 		fields = append(fields, WithService(cfg.Service))
 	}
+	if cfg.Layer != "" {
+		fields = append(fields, WithLayer(cfg.Layer))
+	}
 
 	opts = append(opts, zap.Fields(fields...))
 
-	logger, err := NewProduction(opts...)
+	//options = append(options, WithCaller())
+
+	glog, err := NewProduction(options...)
 	if err != nil {
 		return nil, err
 	}
 
 	zap.L().With()
-	return logger, nil
+	return glog, nil
 }

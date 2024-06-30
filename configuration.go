@@ -1,9 +1,10 @@
-package logger
+package glogger
 
 import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"os"
+	"time"
 )
 
 const (
@@ -15,57 +16,44 @@ const (
 type Config struct {
 	Service    string
 	InstanceID string
+	Layer      string
 }
 
 type ConfigFunc struct {
 	highPriority     zapcore.LevelEnabler
 	lowPriority      zapcore.LevelEnabler
-	Encoder          zapcore.Encoder
+	consoleEncoder   zapcore.Encoder
+	jsonEncoder      zapcore.Encoder
 	consoleDebugging zapcore.WriteSyncer
 	consoleErrors    zapcore.WriteSyncer
 }
 
-func Configure() ConfigFunc {
-	highPriority := zap.LevelEnablerFunc(highPriorityLevelEnableFunc)
-	lowPriority := zap.LevelEnablerFunc(lowPriorityLevelEnableFunc)
+func CoreConfigure() *ConfigFunc {
+	encoderConfig := zapcore.EncoderConfig{
+		MessageKey: "msg",
 
-	consoleEncoder := zapcore.NewConsoleEncoder(zap.NewProductionEncoderConfig())
-	consoleDebugging := zapcore.Lock(os.Stdout)
-	consoleErrors := zapcore.Lock(os.Stderr)
+		LevelKey:    "lvl",
+		EncodeLevel: zapcore.CapitalColorLevelEncoder,
 
-	cfg := ConfigFunc{
-		highPriority:     highPriority,
-		lowPriority:      lowPriority,
-		Encoder:          consoleEncoder,
-		consoleDebugging: consoleDebugging,
-		consoleErrors:    consoleErrors,
+		TimeKey:    "time",
+		EncodeTime: zapcore.TimeEncoderOfLayout(time.RFC1123Z),
+
+		CallerKey:    "caller",
+		EncodeCaller: zapcore.FullCallerEncoder,
+	}
+
+	cfg := &ConfigFunc{
+		highPriority:     zap.LevelEnablerFunc(highPriorityLevelEnableFunc),
+		lowPriority:      zap.LevelEnablerFunc(lowPriorityLevelEnableFunc),
+		consoleEncoder:   zapcore.NewConsoleEncoder(encoderConfig),
+		jsonEncoder:      zapcore.NewJSONEncoder(encoderConfig),
+		consoleDebugging: zapcore.Lock(os.Stdout),
+		consoleErrors:    zapcore.Lock(os.Stderr),
 	}
 
 	return cfg
 }
 
-func zapConfig() zap.Config {
-	zapCfg := zap.Config{
-		Encoding:         "console",
-		Level:            zap.NewAtomicLevelAt(zap.InfoLevel),
-		OutputPaths:      []string{"stderr"},
-		ErrorOutputPaths: []string{"stderr"},
-		EncoderConfig: zapcore.EncoderConfig{
-			MessageKey: "message",
-
-			LevelKey:    "level",
-			EncodeLevel: zapcore.CapitalColorLevelEncoder,
-
-			TimeKey:    "time",
-			EncodeTime: zapcore.ISO8601TimeEncoder,
-
-			CallerKey:    "caller",
-			EncodeCaller: zapcore.ShortCallerEncoder,
-		},
-	}
-
-	return zapCfg
-}
 func highPriorityLevelEnableFunc(lvl zapcore.Level) bool {
 	return lvl >= zapcore.ErrorLevel
 }

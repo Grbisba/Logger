@@ -1,4 +1,4 @@
-package logger
+package glogger
 
 import (
 	"github.com/stretchr/testify/assert"
@@ -18,13 +18,14 @@ func TestReplace(t *testing.T) {
 	}
 }
 
-func TestLogger(t *testing.T) {
+func TestLoggerWithLlvError(t *testing.T) {
 	cfg := Config{
-		Service:    "production",
-		InstanceID: "125g51ad-r52341d",
+		Service:    "",
+		InstanceID: "",
+		Layer:      "",
 	}
 	logger, err := NewWithConfig(cfg)
 	require.NoError(t, err)
 
-	logger.Info("hello world")
+	logger.Error("unwrapped error")
 }

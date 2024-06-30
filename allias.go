@@ -1,4 +1,4 @@
-package logger
+package glogger
 
 type PrimitiveArrayEncoder interface {
 	AppendBool(bool)
