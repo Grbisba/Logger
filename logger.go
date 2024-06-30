@@ -2,7 +2,6 @@ package logger
 
 import (
 	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 )
 
 func NewProduction(opts ...zap.Option) (*zap.Logger, error) {
@@ -11,40 +10,23 @@ func NewProduction(opts ...zap.Option) (*zap.Logger, error) {
 	return logger, nil
 }
 
-func NewWithConfig(cfg ConfigFunc, opts ...zap.Option) (*zap.Logger, error) {
-	//var fields []zap.Field
+func NewWithConfig(cfg Config, opts ...zap.Option) (*zap.Logger, error) {
+	var fields []zap.Field
 
-	zcfg := zap.Config{
-		Encoding:         "json",
-		Level:            zap.NewAtomicLevelAt(zap.InfoLevel),
-		OutputPaths:      []string{"stderr"},
-		ErrorOutputPaths: []string{"stderr"},
-		EncoderConfig: zapcore.EncoderConfig{
-			MessageKey: "message",
-
-			LevelKey:    "level",
-			EncodeLevel: zapcore.CapitalColorLevelEncoder,
-
-			TimeKey:    "time",
-			EncodeTime: zapcore.ISO8601TimeEncoder,
-
-			CallerKey:    "caller",
-			EncodeCaller: zapcore.ShortCallerEncoder,
-		},
+	if cfg.InstanceID != "" {
+		fields = append(fields, WithInstanceID(cfg.InstanceID))
 	}
-	logger, err := zcfg.Build()
+	if cfg.Service != "" {
+		fields = append(fields, WithService(cfg.Service))
+	}
+
+	opts = append(opts, zap.Fields(fields...))
+
+	logger, err := NewProduction(opts...)
 	if err != nil {
 		return nil, err
 	}
 
-	//if cfg.InstanceID != "" {
-	//	fields = append(fields, WithInstanceID(cfg.InstanceID))
-	//}
-	//if cfg.Service != "" {
-	//	fields = append(fields, WithService(cfg.Service))
-	//}
-	//opts = append(opts, zap.Fields(fields...))
-
 	zap.L().With()
-	return logger, err
+	return logger, nil
 }

@@ -6,10 +6,10 @@ import (
 
 // NewCore is created a new core for logger
 func NewCore() zapcore.Core {
-	cfgr := Configure()
+	cfg := Configure()
 	core := zapcore.NewTee(
-		zapcore.NewCore(cfgr.jsonEncoder, cfgr.consoleErrors, cfgr.highPriority),
-		zapcore.NewCore(cfgr.jsonEncoder, cfgr.consoleDebugging, cfgr.lowPriority),
+		zapcore.NewCore(cfg.Encoder, cfg.consoleErrors, cfg.highPriority),
+		zapcore.NewCore(cfg.Encoder, cfg.consoleDebugging, cfg.lowPriority),
 	)
 	return core
 }

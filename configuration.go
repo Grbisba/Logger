@@ -20,7 +20,7 @@ type Config struct {
 type ConfigFunc struct {
 	highPriority     zapcore.LevelEnabler
 	lowPriority      zapcore.LevelEnabler
-	jsonEncoder      zapcore.Encoder
+	Encoder          zapcore.Encoder
 	consoleDebugging zapcore.WriteSyncer
 	consoleErrors    zapcore.WriteSyncer
 }
@@ -29,14 +29,14 @@ func Configure() ConfigFunc {
 	highPriority := zap.LevelEnablerFunc(highPriorityLevelEnableFunc)
 	lowPriority := zap.LevelEnablerFunc(lowPriorityLevelEnableFunc)
 
-	jsonEncoder := zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig())
+	consoleEncoder := zap	core.NewConsoleEncoder(zap.NewProductionEncoderConfig())
 	consoleDebugging := zapcore.Lock(os.Stdout)
 	consoleErrors := zapcore.Lock(os.Stderr)
 
 	cfg := ConfigFunc{
 		highPriority:     highPriority,
 		lowPriority:      lowPriority,
-		jsonEncoder:      jsonEncoder,
+		Encoder:          consoleEncoder,
 		consoleDebugging: consoleDebugging,
 		consoleErrors:    consoleErrors,
 	}
@@ -44,6 +44,28 @@ func Configure() ConfigFunc {
 	return cfg
 }
 
+func zapConfig() zap.Config {
+	zapCfg := zap.Config{
+		Encoding:         "console",
+		Level:            zap.NewAtomicLevelAt(zap.InfoLevel),
+		OutputPaths:      []string{"stderr"},
+		ErrorOutputPaths: []string{"stderr"},
+		EncoderConfig: zapcore.EncoderConfig{
+			MessageKey: "message",
+
+			LevelKey:    "level",
+			EncodeLevel: zapcore.CapitalColorLevelEncoder,
+
+			TimeKey:    "time",
+			EncodeTime: zapcore.ISO8601TimeEncoder,
+
+			CallerKey:    "caller",
+			EncodeCaller: zapcore.ShortCallerEncoder,
+		},
+	}
+
+	return zapCfg
+}
 func highPriorityLevelEnableFunc(lvl zapcore.Level) bool {
 	return lvl >= zapcore.ErrorLevel
 }

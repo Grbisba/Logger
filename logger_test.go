@@ -19,12 +19,12 @@ func TestReplace(t *testing.T) {
 }
 
 func TestLogger(t *testing.T) {
-	//cfg := Config{
-	//	Service:    "production",
-	//	InstanceID: "125g51ad-r52341d",
-	//}
-	cfg := Configure()
+	cfg := Config{
+		Service:    "production",
+		InstanceID: "125g51ad-r52341d",
+	}
 	logger, err := NewWithConfig(cfg)
 	require.NoError(t, err)
-	logger.Info("hello world", zap.String("key", "val"))
+
+	logger.Info("hello world")
 }
