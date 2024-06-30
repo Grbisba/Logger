@@ -29,7 +29,7 @@ func Configure() ConfigFunc {
 	highPriority := zap.LevelEnablerFunc(highPriorityLevelEnableFunc)
 	lowPriority := zap.LevelEnablerFunc(lowPriorityLevelEnableFunc)
 
-	consoleEncoder := zap	core.NewConsoleEncoder(zap.NewProductionEncoderConfig())
+	consoleEncoder := zapcore.NewConsoleEncoder(zap.NewProductionEncoderConfig())
 	consoleDebugging := zapcore.Lock(os.Stdout)
 	consoleErrors := zapcore.Lock(os.Stderr)
 
