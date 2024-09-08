@@ -3,6 +3,7 @@ package logger
 import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"gopkg.in/natefinch/lumberjack.v2"
 	"os"
 )
 
@@ -12,35 +13,64 @@ const (
 	LayerField      = "layer"
 )
 
-type Config struct {
-	Service    *string
-	InstanceID *string
+type Cfg struct {
+	Service    string
+	InstanceID string
+	WithLayer  string
 }
 
-type ConfigFunc struct {
+type FileConfig struct {
+	highPriority zapcore.LevelEnabler
+	lowPriority  zapcore.LevelEnabler
+	jsonEncoder  zapcore.Encoder
+	file         zapcore.WriteSyncer
+}
+
+type ConsoleConfig struct {
 	highPriority     zapcore.LevelEnabler
 	lowPriority      zapcore.LevelEnabler
-	jsonEncoder      zapcore.Encoder
+	consoleEncoder   zapcore.Encoder
 	consoleDebugging zapcore.WriteSyncer
 	consoleErrors    zapcore.WriteSyncer
 }
 
-func Configure() *ConfigFunc {
+func Configure() (*FileConfig, *ConsoleConfig) {
 	highPriority := zap.LevelEnablerFunc(highPriorityLevelEnableFunc)
 	lowPriority := zap.LevelEnablerFunc(lowPriorityLevelEnableFunc)
 
-	jsonEncoder := zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig())
 	consoleDebugging := zapcore.Lock(os.Stdout)
 	consoleErrors := zapcore.Lock(os.Stderr)
-	cfg := &ConfigFunc{
+
+	file := zapcore.AddSync(&lumberjack.Logger{
+		Filename:   "logs/app.log",
+		MaxSize:    10, // megabytes
+		MaxBackups: 3,
+		MaxAge:     7, // days
+	})
+
+	prodCfg := zap.NewProductionEncoderConfig()
+	prodCfg.TimeKey = "timestamp"
+	prodCfg.EncodeTime = zapcore.ISO8601TimeEncoder
+	jsonEncoder := zapcore.NewJSONEncoder(prodCfg)
+
+	devCfg := zap.NewDevelopmentEncoderConfig()
+	devCfg.EncodeLevel = zapcore.CapitalColorLevelEncoder
+	consoleEncoder := zapcore.NewConsoleEncoder(devCfg)
+
+	pCfg := &FileConfig{
+		highPriority: highPriority,
+		lowPriority:  lowPriority,
+		jsonEncoder:  jsonEncoder,
+		file:         file,
+	}
+	cCfg := &ConsoleConfig{
 		highPriority:     highPriority,
 		lowPriority:      lowPriority,
-		jsonEncoder:      jsonEncoder,
+		consoleEncoder:   consoleEncoder,
 		consoleDebugging: consoleDebugging,
 		consoleErrors:    consoleErrors,
 	}
-
-	return cfg
+	return pCfg, cCfg
 }
 
 func highPriorityLevelEnableFunc(lvl zapcore.Level) bool {

@@ -4,9 +4,6 @@ import (
 	"go.uber.org/zap"
 )
 
-// Options function
-type Options func(l *zap.Logger)
-
 func WithLayer(layer string) zap.Field {
 	return zap.String(LayerField, layer)
 }
