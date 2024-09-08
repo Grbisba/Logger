@@ -14,9 +14,13 @@ const (
 )
 
 type Cfg struct {
-	Service    string
-	InstanceID string
-	WithLayer  string
+	Service              string
+	InstanceID           string
+	WithLayer            string
+	FilePathWithFileName string
+	MaxFileAge           int
+	MaxFileBackups       int
+	MaxFileSize          int
 }
 
 type FileConfig struct {
@@ -34,18 +38,18 @@ type ConsoleConfig struct {
 	consoleErrors    zapcore.WriteSyncer
 }
 
-func Configure() (*FileConfig, *ConsoleConfig) {
+func Configure(config Cfg) (*FileConfig, *ConsoleConfig) {
 	highPriority := zap.LevelEnablerFunc(highPriorityLevelEnableFunc)
 	lowPriority := zap.LevelEnablerFunc(lowPriorityLevelEnableFunc)
 
 	consoleDebugging := zapcore.Lock(os.Stdout)
 	consoleErrors := zapcore.Lock(os.Stderr)
 
-	file := zapcore.AddSync(&lumberjack.Logger{
-		Filename:   "logs/app.log",
-		MaxSize:    10, // megabytes
-		MaxBackups: 3,
-		MaxAge:     7, // days
+	logFile := zapcore.AddSync(&lumberjack.Logger{
+		Filename:   config.FilePathWithFileName,
+		MaxSize:    config.MaxFileSize,
+		MaxBackups: config.MaxFileBackups,
+		MaxAge:     config.MaxFileAge,
 	})
 
 	prodCfg := zap.NewProductionEncoderConfig()
@@ -61,7 +65,7 @@ func Configure() (*FileConfig, *ConsoleConfig) {
 		highPriority: highPriority,
 		lowPriority:  lowPriority,
 		jsonEncoder:  jsonEncoder,
-		file:         file,
+		file:         logFile,
 	}
 	cCfg := &ConsoleConfig{
 		highPriority:     highPriority,

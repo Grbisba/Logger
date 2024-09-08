@@ -2,28 +2,28 @@ package logger
 
 import "go.uber.org/zap"
 
-func NewProduction(opts ...zap.Option) (*zap.Logger, error) {
-	logger := zap.New(NewCore()).WithOptions(opts...)
+func NewProduction(config Cfg, opts ...zap.Option) (*zap.Logger, error) {
+	logger := zap.New(NewCore(config)).WithOptions(opts...)
 	zap.ReplaceGlobals(logger)
 	return logger, nil
 }
 
-func NewWithConfig(cfg Cfg, opts ...zap.Option) (*zap.Logger, error) {
+func NewWithConfig(config Cfg, opts ...zap.Option) (*zap.Logger, error) {
 	var fields []zap.Field
 
-	if cfg.InstanceID != "" {
-		fields = append(fields, WithInstanceID(cfg.InstanceID))
+	if config.InstanceID != "" {
+		fields = append(fields, WithInstanceID(config.InstanceID))
 	}
-	if cfg.Service != "" {
-		fields = append(fields, WithService(cfg.Service))
+	if config.Service != "" {
+		fields = append(fields, WithService(config.Service))
 	}
-	if cfg.WithLayer != "" {
-		fields = append(fields, WithLayer(cfg.WithLayer))
+	if config.WithLayer != "" {
+		fields = append(fields, WithLayer(config.WithLayer))
 	}
 
 	opts = append(opts, zap.Fields(fields...))
 
-	logger, err := NewProduction(opts...)
+	logger, err := NewProduction(config, opts...)
 
 	return logger, err
 }

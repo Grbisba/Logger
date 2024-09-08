@@ -3,8 +3,8 @@ package logger
 import "go.uber.org/zap/zapcore"
 
 // NewCore is created a new core for logger
-func NewCore() zapcore.Core {
-	productionConfig, developmentCfg := Configure()
+func NewCore(config Cfg) zapcore.Core {
+	productionConfig, developmentCfg := Configure(config)
 	core := zapcore.NewTee(
 		zapcore.NewCore(developmentCfg.consoleEncoder,
 			developmentCfg.consoleErrors,
